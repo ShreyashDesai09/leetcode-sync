@@ -18,7 +18,15 @@ jobs:
 
       - name: Multi-Category Sort
         run: |
-          # 1. Define your category keywords
+          # 1. THE DUMB COPY - Save every new file to ALL_CODES immediately
+          mkdir -p ALL_CODES
+          for file in *.{java,sql}; do
+            [ -e "$file" ] || continue
+            cp "$file" ALL_CODES/
+            echo "Archived $file to ALL_CODES"
+          done
+
+          # 2. Define your category keywords
           declare -A categories
           categories["Arrays"]="array sum element jump squares"
           categories["Linked_Lists"]="list_cycle middle_of_the linked_list"
@@ -26,22 +34,25 @@ jobs:
           categories["SQL"]="customer employee table earning"
           categories["Dynamic_Programming"]="house_robber climbing_stairs"
 
-          # 2. Process every new file in the root
+          # 3. Process the sorting as usual...
           for file in *.{java,sql}; do
             [ -e "$file" ] || continue
             filename_lower=$(echo "$file" | tr '[:upper:]' '[:lower:]')
             
-            # Check every category - a file can go into multiple!
             for cat in "${!categories[@]}"; do
               for keyword in ${categories[$cat]}; do
                 if [[ "$filename_lower" == *"$keyword"* ]]; then
                   mkdir -p "$cat"
                   cp "$file" "$cat/"
-                  echo "Copied $file to $cat/"
-                  break # Move to next category check for the SAME file
+                  break 
                 fi
               done
             done
+            
+            # Clean up the root
+            mkdir -p Master_List
+            mv "$file" Master_List/
+          done
             
             # 3. Clean up the root by moving the original to Master_List
             mkdir -p Master_List
