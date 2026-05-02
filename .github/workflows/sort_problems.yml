@@ -1,0 +1,57 @@
+name: Auto Category Sorter
+on:
+  push:
+    branches: [ main ]
+    # Only run when you push Java or SQL files to the root
+    paths:
+      - '*.java'
+      - '*.sql'
+
+jobs:
+  sort-and-sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to allow the robot to push back to your repo
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Multi-Category Sort
+        run: |
+          # 1. Define your category keywords
+          declare -A categories
+          categories["Arrays"]="array sum element jump squares"
+          categories["Linked_Lists"]="list_cycle middle_of_the linked_list"
+          categories["Two_Pointers"]="two_pointers remove_element pair_sum"
+          categories["SQL"]="customer employee table earning"
+          categories["Dynamic_Programming"]="house_robber climbing_stairs"
+
+          # 2. Process every new file in the root
+          for file in *.{java,sql}; do
+            [ -e "$file" ] || continue
+            filename_lower=$(echo "$file" | tr '[:upper:]' '[:lower:]')
+            
+            # Check every category - a file can go into multiple!
+            for cat in "${!categories[@]}"; do
+              for keyword in ${categories[$cat]}; do
+                if [[ "$filename_lower" == *"$keyword"* ]]; then
+                  mkdir -p "$cat"
+                  cp "$file" "$cat/"
+                  echo "Copied $file to $cat/"
+                  break # Move to next category check for the SAME file
+                fi
+              done
+            done
+            
+            # 3. Clean up the root by moving the original to Master_List
+            mkdir -p Master_List
+            mv "$file" Master_List/
+          done
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          # Only commit if there are actually changes
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Automated category sorting" && git push)
