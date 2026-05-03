@@ -3,10 +3,10 @@ name: Auto Category Sorter
 on:
   push:
     branches:
-        - main
+      - main
     paths:
-        - '**.java'
-        - '**.sql'
+      - '**.java'
+      - '**.sql'
 
 jobs:
   sort-and-archive:
@@ -25,8 +25,7 @@ jobs:
           # 1. Create the ALL_CODES archive (The Vault)
           mkdir -p ALL_CODES
           
-          # Copy every new java/sql file to the archive before sorting
-          # This ensures a "No Checking" copy exists as requested
+          # Use a loop with existence check to prevent 'cannot stat' errors
           for file in *.{java,sql}; do
             [ -e "$file" ] || continue
             cp "$file" ALL_CODES/
@@ -42,12 +41,11 @@ jobs:
           categories["Hash_Table"]="hash map dictionary"
           categories["Dynamic_Programming"]="house_robber climbing_stairs"
 
-          # 3. Sort files into categories
+          # 3. Sort files into categories based on keywords
           for file in *.{java,sql}; do
             [ -e "$file" ] || continue
             filename_lower=$(echo "$file" | tr '[:upper:]' '[:lower:]')
             
-            # Check for matches in the keywords
             for cat in "${!categories[@]}"; do
               for keyword in ${categories[$cat]}; do
                 if [[ "$filename_lower" == *"$keyword"* ]]; then
@@ -59,8 +57,7 @@ jobs:
               done
             done
             
-            # 4. Move original to Master_List and clear the root
-            # This ensures your local folder stays clean after you PULL
+            # 4. Move original to Master_List to clear the root folder
             mkdir -p Master_List
             mv "$file" Master_List/
           done
@@ -72,7 +69,7 @@ jobs:
           
           git add .
           
-          # Only commit if the robot actually moved/created files
+          # Only commit if changes were actually made by the robot
           if ! git diff --cached --quiet; then
             git commit -m "Automated: Archived to ALL_CODES and Bifurcated categories"
             git push
