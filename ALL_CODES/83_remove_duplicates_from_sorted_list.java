@@ -1,0 +1,28 @@
+// LeetCode: 83. Remove Duplicates from Sorted List
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+ * }
+ */
+class _83_remove_duplicates_from_sorted_list {
+    public ListNode deleteDuplicates(ListNode head) {
+        
+        ListNode temp = head;
+        
+        if(temp == null) return null;
+        
+        while(temp.next != null)
+        {
+            if(temp.val == temp.next.val)
+                    temp.next = temp.next.next;
+            else
+                temp = temp.next;
+        }
+        return head;
+    }
+}
